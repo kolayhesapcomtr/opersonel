@@ -1,6 +1,9 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
 import DashboardLayout from '../../components/layouts/DashboardLayout';
+import Modal from '../../components/ui/Modal';
+import { ToastContainer } from '../../components/ui/Toast';
+import EmployeeForm from '../../components/forms/EmployeeForm';
+import { useToast } from '../../hooks/useToast';
 import { employeeService } from '../../services/employeeService';
 import { departmentService } from '../../services/departmentService';
 import { Employee, Department, EmploymentStatus } from '../../types';
@@ -13,6 +16,11 @@ export default function EmployeesPage() {
   const [search, setSearch] = useState('');
   const [selectedDepartment, setSelectedDepartment] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('');
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedEmployee, setSelectedEmployee] = useState<Employee | undefined>();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const { toasts, removeToast, success, error } = useToast();
 
   useEffect(() => {
     loadData();
@@ -30,8 +38,8 @@ export default function EmployeesPage() {
       ]);
       setEmployees(employeesData);
       setDepartments(departmentsData);
-    } catch (error) {
-      console.error('Failed to load data:', error);
+    } catch (err) {
+      error('Veriler yüklenirken hata oluştu');
     } finally {
       setLoading(false);
     }
@@ -46,10 +54,39 @@ export default function EmployeesPage() {
         status: selectedStatus as EmploymentStatus || undefined,
       });
       setEmployees(data);
-    } catch (error) {
-      console.error('Failed to filter employees:', error);
+    } catch (err) {
+      error('Filtreleme sırasında hata oluştu');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleCreate = () => {
+    setSelectedEmployee(undefined);
+    setIsModalOpen(true);
+  };
+
+  const handleEdit = (employee: Employee) => {
+    setSelectedEmployee(employee);
+    setIsModalOpen(true);
+  };
+
+  const handleSubmit = async (data: Partial<Employee>) => {
+    setIsSubmitting(true);
+    try {
+      if (selectedEmployee) {
+        await employeeService.update(selectedEmployee.id, data);
+        success('Çalışan başarıyla güncellendi');
+      } else {
+        await employeeService.create(data);
+        success('Çalışan başarıyla oluşturuldu');
+      }
+      setIsModalOpen(false);
+      await loadData();
+    } catch (err: any) {
+      error(err.response?.data?.error || 'İşlem başarısız oldu');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -89,6 +126,8 @@ export default function EmployeesPage() {
 
   return (
     <DashboardLayout>
+      <ToastContainer toasts={toasts} onRemove={removeToast} />
+
       <div className="space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
@@ -96,7 +135,10 @@ export default function EmployeesPage() {
             <h1 className="text-3xl font-bold text-gray-900">Çalışanlar</h1>
             <p className="text-gray-600 mt-1">{employees.length} çalışan</p>
           </div>
-          <button className="btn-primary inline-flex items-center" disabled>
+          <button
+            onClick={handleCreate}
+            className="btn-primary inline-flex items-center"
+          >
             <Plus className="w-5 h-5 mr-2" />
             Yeni Çalışan
           </button>
@@ -105,7 +147,6 @@ export default function EmployeesPage() {
         {/* Filters */}
         <div className="card">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            {/* Search */}
             <div className="md:col-span-2">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
@@ -119,7 +160,6 @@ export default function EmployeesPage() {
               </div>
             </div>
 
-            {/* Department Filter */}
             <div>
               <select
                 value={selectedDepartment}
@@ -135,7 +175,6 @@ export default function EmployeesPage() {
               </select>
             </div>
 
-            {/* Status Filter */}
             <div>
               <select
                 value={selectedStatus}
@@ -236,7 +275,12 @@ export default function EmployeesPage() {
                         {getStatusBadge(employee.status)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <span className="text-gray-400 cursor-not-allowed">Detay</span>
+                        <button
+                          onClick={() => handleEdit(employee)}
+                          className="text-primary-600 hover:text-primary-900"
+                        >
+                          Düzenle
+                        </button>
                       </td>
                     </tr>
                   ))}
@@ -246,6 +290,21 @@ export default function EmployeesPage() {
           )}
         </div>
       </div>
+
+      {/* Employee Modal */}
+      <Modal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        title={selectedEmployee ? 'Çalışan Düzenle' : 'Yeni Çalışan'}
+        size="xl"
+      >
+        <EmployeeForm
+          employee={selectedEmployee}
+          onSubmit={handleSubmit}
+          onCancel={() => setIsModalOpen(false)}
+          isLoading={isSubmitting}
+        />
+      </Modal>
     </DashboardLayout>
   );
 }
