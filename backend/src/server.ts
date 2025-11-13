@@ -12,6 +12,9 @@ import { resolveTenant } from './middleware/tenant.middleware';
 // Import routes
 import authRoutes from './modules/auth/auth.routes';
 import tenantRoutes from './modules/tenant/tenant.routes';
+import employeeRoutes from './modules/employee/employee.routes';
+import departmentRoutes from './modules/department/department.routes';
+import positionRoutes from './modules/position/position.routes';
 
 const app: Application = express();
 
@@ -52,6 +55,9 @@ app.get('/api', (req, res) => {
 // Mount routes
 app.use('/api/auth', authRoutes);
 app.use('/api/tenants', tenantRoutes);
+app.use('/api/employees', employeeRoutes);
+app.use('/api/departments', departmentRoutes);
+app.use('/api/positions', positionRoutes);
 
 // Error handlers
 app.use(notFoundHandler);
