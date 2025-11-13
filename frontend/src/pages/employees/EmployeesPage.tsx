@@ -1,13 +1,14 @@
 import { useState, useEffect } from 'react';
 import DashboardLayout from '../../components/layouts/DashboardLayout';
 import Modal from '../../components/ui/Modal';
+import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import { ToastContainer } from '../../components/ui/Toast';
 import EmployeeForm from '../../components/forms/EmployeeForm';
 import { useToast } from '../../hooks/useToast';
 import { employeeService } from '../../services/employeeService';
 import { departmentService } from '../../services/departmentService';
 import { Employee, Department, EmploymentStatus } from '../../types';
-import { Search, Plus, Mail, Phone, Building2, Briefcase } from 'lucide-react';
+import { Search, Plus, Mail, Phone, Building2, Briefcase, Trash2 } from 'lucide-react';
 
 export default function EmployeesPage() {
   const [employees, setEmployees] = useState<Employee[]>([]);
@@ -19,6 +20,9 @@ export default function EmployeesPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | undefined>();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [employeeToDelete, setEmployeeToDelete] = useState<Employee | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const { toasts, removeToast, success, error } = useToast();
 
@@ -87,6 +91,28 @@ export default function EmployeesPage() {
       error(err.response?.data?.error || 'İşlem başarısız oldu');
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleDeleteClick = (employee: Employee) => {
+    setEmployeeToDelete(employee);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!employeeToDelete) return;
+
+    setIsDeleting(true);
+    try {
+      await employeeService.delete(employeeToDelete.id);
+      success('Çalışan başarıyla silindi');
+      setIsDeleteDialogOpen(false);
+      setEmployeeToDelete(null);
+      await loadData();
+    } catch (err: any) {
+      error(err.response?.data?.error || 'Silme işlemi başarısız oldu');
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -275,12 +301,21 @@ export default function EmployeesPage() {
                         {getStatusBadge(employee.status)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <button
-                          onClick={() => handleEdit(employee)}
-                          className="text-primary-600 hover:text-primary-900"
-                        >
-                          Düzenle
-                        </button>
+                        <div className="flex items-center space-x-3">
+                          <button
+                            onClick={() => handleEdit(employee)}
+                            className="text-primary-600 hover:text-primary-900"
+                          >
+                            Düzenle
+                          </button>
+                          <button
+                            onClick={() => handleDeleteClick(employee)}
+                            className="text-red-600 hover:text-red-900 inline-flex items-center"
+                          >
+                            <Trash2 className="w-4 h-4 mr-1" />
+                            Sil
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -305,6 +340,19 @@ export default function EmployeesPage() {
           isLoading={isSubmitting}
         />
       </Modal>
+
+      {/* Delete Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={isDeleteDialogOpen}
+        onClose={() => setIsDeleteDialogOpen(false)}
+        onConfirm={handleDeleteConfirm}
+        title="Çalışanı Sil"
+        message={`${employeeToDelete?.firstName} ${employeeToDelete?.lastName} adlı çalışanı silmek istediğinize emin misiniz? Bu işlem geri alınamaz.`}
+        confirmText="Sil"
+        cancelText="İptal"
+        type="danger"
+        isLoading={isDeleting}
+      />
     </DashboardLayout>
   );
 }

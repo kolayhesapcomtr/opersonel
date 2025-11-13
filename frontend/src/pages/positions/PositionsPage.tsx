@@ -1,13 +1,14 @@
 import { useState, useEffect } from 'react';
 import DashboardLayout from '../../components/layouts/DashboardLayout';
 import Modal from '../../components/ui/Modal';
+import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import { ToastContainer } from '../../components/ui/Toast';
 import PositionForm from '../../components/forms/PositionForm';
 import { useToast } from '../../hooks/useToast';
 import { positionService } from '../../services/positionService';
 import { departmentService } from '../../services/departmentService';
 import { Position, Department } from '../../types';
-import { Briefcase, Plus, Building2, Users, Edit } from 'lucide-react';
+import { Briefcase, Plus, Building2, Users, Edit, Trash2 } from 'lucide-react';
 
 export default function PositionsPage() {
   const [positions, setPositions] = useState<Position[]>([]);
@@ -17,6 +18,9 @@ export default function PositionsPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedPosition, setSelectedPosition] = useState<Position | undefined>();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [positionToDelete, setPositionToDelete] = useState<Position | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const { toasts, removeToast, success, error } = useToast();
 
@@ -97,6 +101,28 @@ export default function PositionsPage() {
       error(err.response?.data?.error || 'İşlem başarısız oldu');
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleDeleteClick = (position: Position) => {
+    setPositionToDelete(position);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!positionToDelete) return;
+
+    setIsDeleting(true);
+    try {
+      await positionService.delete(positionToDelete.id);
+      success('Pozisyon başarıyla silindi');
+      setIsDeleteDialogOpen(false);
+      setPositionToDelete(null);
+      await loadPositions();
+    } catch (err: any) {
+      error(err.response?.data?.error || 'Silme işlemi başarısız oldu');
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -242,13 +268,22 @@ export default function PositionsPage() {
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <button
-                          onClick={() => handleEdit(position)}
-                          className="text-primary-600 hover:text-primary-900 inline-flex items-center"
-                        >
-                          <Edit className="w-4 h-4 mr-1" />
-                          Düzenle
-                        </button>
+                        <div className="flex items-center space-x-3">
+                          <button
+                            onClick={() => handleEdit(position)}
+                            className="text-primary-600 hover:text-primary-900 inline-flex items-center"
+                          >
+                            <Edit className="w-4 h-4 mr-1" />
+                            Düzenle
+                          </button>
+                          <button
+                            onClick={() => handleDeleteClick(position)}
+                            className="text-red-600 hover:text-red-900 inline-flex items-center"
+                          >
+                            <Trash2 className="w-4 h-4 mr-1" />
+                            Sil
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -273,6 +308,19 @@ export default function PositionsPage() {
           isLoading={isSubmitting}
         />
       </Modal>
+
+      {/* Delete Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={isDeleteDialogOpen}
+        onClose={() => setIsDeleteDialogOpen(false)}
+        onConfirm={handleDeleteConfirm}
+        title="Pozisyonu Sil"
+        message={`${positionToDelete?.title} pozisyonunu silmek istediğinize emin misiniz? Bu işlem geri alınamaz.`}
+        confirmText="Sil"
+        cancelText="İptal"
+        type="danger"
+        isLoading={isDeleting}
+      />
     </DashboardLayout>
   );
 }

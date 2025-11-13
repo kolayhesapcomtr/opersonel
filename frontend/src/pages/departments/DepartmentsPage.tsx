@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react';
 import DashboardLayout from '../../components/layouts/DashboardLayout';
 import Modal from '../../components/ui/Modal';
+import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import { ToastContainer } from '../../components/ui/Toast';
 import DepartmentForm from '../../components/forms/DepartmentForm';
 import { useToast } from '../../hooks/useToast';
 import { departmentService } from '../../services/departmentService';
 import { Department } from '../../types';
-import { Building2, Users, Plus, Edit } from 'lucide-react';
+import { Building2, Users, Plus, Edit, Trash2 } from 'lucide-react';
 
 export default function DepartmentsPage() {
   const [departments, setDepartments] = useState<Department[]>([]);
@@ -14,6 +15,9 @@ export default function DepartmentsPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedDepartment, setSelectedDepartment] = useState<Department | undefined>();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [departmentToDelete, setDepartmentToDelete] = useState<Department | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const { toasts, removeToast, success, error } = useToast();
 
@@ -61,6 +65,28 @@ export default function DepartmentsPage() {
     }
   };
 
+  const handleDeleteClick = (department: Department) => {
+    setDepartmentToDelete(department);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!departmentToDelete) return;
+
+    setIsDeleting(true);
+    try {
+      await departmentService.delete(departmentToDelete.id);
+      success('Departman başarıyla silindi');
+      setIsDeleteDialogOpen(false);
+      setDepartmentToDelete(null);
+      await loadDepartments();
+    } catch (err: any) {
+      error(err.response?.data?.error || 'Silme işlemi başarısız oldu');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   if (loading) {
     return (
       <DashboardLayout>
@@ -95,14 +121,23 @@ export default function DepartmentsPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {departments.map((department) => (
             <div key={department.id} className="card hover:shadow-lg transition-shadow relative group">
-              {/* Edit Button */}
-              <button
-                onClick={() => handleEdit(department)}
-                className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity p-2 bg-white rounded-lg shadow hover:bg-gray-50"
-                title="Düzenle"
-              >
-                <Edit className="w-4 h-4 text-gray-600" />
-              </button>
+              {/* Action Buttons */}
+              <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity flex space-x-2">
+                <button
+                  onClick={() => handleEdit(department)}
+                  className="p-2 bg-white rounded-lg shadow hover:bg-gray-50"
+                  title="Düzenle"
+                >
+                  <Edit className="w-4 h-4 text-gray-600" />
+                </button>
+                <button
+                  onClick={() => handleDeleteClick(department)}
+                  className="p-2 bg-white rounded-lg shadow hover:bg-red-50"
+                  title="Sil"
+                >
+                  <Trash2 className="w-4 h-4 text-red-600" />
+                </button>
+              </div>
 
               <div className="flex items-start justify-between">
                 <div className="flex items-center">
@@ -178,6 +213,19 @@ export default function DepartmentsPage() {
           isLoading={isSubmitting}
         />
       </Modal>
+
+      {/* Delete Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={isDeleteDialogOpen}
+        onClose={() => setIsDeleteDialogOpen(false)}
+        onConfirm={handleDeleteConfirm}
+        title="Departmanı Sil"
+        message={`${departmentToDelete?.name} departmanını silmek istediğinize emin misiniz? Bu işlem geri alınamaz.`}
+        confirmText="Sil"
+        cancelText="İptal"
+        type="danger"
+        isLoading={isDeleting}
+      />
     </DashboardLayout>
   );
 }
