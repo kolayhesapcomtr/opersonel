@@ -7,6 +7,7 @@ import RegisterPage from './pages/auth/RegisterPage';
 import DashboardPage from './pages/dashboard/DashboardPage';
 import EmployeesPage from './pages/employees/EmployeesPage';
 import DepartmentsPage from './pages/departments/DepartmentsPage';
+import PositionsPage from './pages/positions/PositionsPage';
 
 function App() {
   return (
@@ -38,6 +39,14 @@ function App() {
           element={
             <ProtectedRoute>
               <DepartmentsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/positions"
+          element={
+            <ProtectedRoute>
+              <PositionsPage />
             </ProtectedRoute>
           }
         />

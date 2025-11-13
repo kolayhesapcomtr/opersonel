@@ -3,6 +3,7 @@ import { useAuthStore } from '../../store/authStore';
 import {
   Users,
   Building2,
+  Briefcase,
   Calendar,
   DollarSign,
   BarChart3,
@@ -33,6 +34,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
     { name: 'Çalışanlar', href: '/employees', icon: Users },
     { name: 'Departmanlar', href: '/departments', icon: Building2 },
+    { name: 'Pozisyonlar', href: '/positions', icon: Briefcase },
     { name: 'İzinler', href: '/leave-requests', icon: Calendar },
     { name: 'Bordro', href: '/payroll', icon: DollarSign },
     { name: 'Raporlar', href: '/reports', icon: BarChart3 },
