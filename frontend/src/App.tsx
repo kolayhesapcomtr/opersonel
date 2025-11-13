@@ -6,6 +6,7 @@ import LoginPage from './pages/auth/LoginPage';
 import RegisterPage from './pages/auth/RegisterPage';
 import DashboardPage from './pages/dashboard/DashboardPage';
 import EmployeesPage from './pages/employees/EmployeesPage';
+import EmployeeDetailPage from './pages/employees/EmployeeDetailPage';
 import DepartmentsPage from './pages/departments/DepartmentsPage';
 import PositionsPage from './pages/positions/PositionsPage';
 
@@ -31,6 +32,14 @@ function App() {
           element={
             <ProtectedRoute>
               <EmployeesPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/employees/:id"
+          element={
+            <ProtectedRoute>
+              <EmployeeDetailPage />
             </ProtectedRoute>
           }
         />

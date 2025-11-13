@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import DashboardLayout from '../../components/layouts/DashboardLayout';
 import Modal from '../../components/ui/Modal';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
@@ -8,7 +9,7 @@ import { useToast } from '../../hooks/useToast';
 import { employeeService } from '../../services/employeeService';
 import { departmentService } from '../../services/departmentService';
 import { Employee, Department, EmploymentStatus } from '../../types';
-import { Search, Plus, Mail, Phone, Building2, Briefcase, Trash2 } from 'lucide-react';
+import { Search, Plus, Mail, Phone, Building2, Briefcase, Trash2, Eye } from 'lucide-react';
 
 export default function EmployeesPage() {
   const [employees, setEmployees] = useState<Employee[]>([]);
@@ -302,6 +303,13 @@ export default function EmployeesPage() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                         <div className="flex items-center space-x-3">
+                          <Link
+                            to={`/employees/${employee.id}`}
+                            className="text-blue-600 hover:text-blue-900 inline-flex items-center"
+                          >
+                            <Eye className="w-4 h-4 mr-1" />
+                            Görüntüle
+                          </Link>
                           <button
                             onClick={() => handleEdit(employee)}
                             className="text-primary-600 hover:text-primary-900"
