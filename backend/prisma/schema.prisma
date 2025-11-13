@@ -1,0 +1,343 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// TENANT MANAGEMENT
+// ============================================
+
+model Tenant {
+  id        String   @id @default(uuid())
+  name      String
+  slug      String   @unique
+  email     String?
+  phone     String?
+
+  // Domain settings (for future subdomain/custom domain support)
+  subdomain        String?  @unique
+  customDomain     String?  @unique @map("custom_domain")
+  hasSubdomain     Boolean  @default(false) @map("has_subdomain")
+  hasCustomDomain  Boolean  @default(false) @map("has_custom_domain")
+
+  // Subscription
+  planType            String   @default("free") @map("plan_type") // free, basic, premium, enterprise
+  subscriptionStatus  String   @default("trial") @map("subscription_status") // trial, active, suspended, cancelled
+  subscriptionStart   DateTime? @map("subscription_start")
+  subscriptionEnd     DateTime? @map("subscription_end")
+
+  // Limits
+  maxUsers   Int @default(5) @map("max_users")
+  maxStorage Int @default(1) @map("max_storage") // GB
+
+  // Status
+  isActive Boolean @default(true) @map("is_active")
+
+  // Settings (JSON field for flexible configuration)
+  settings Json @default("{}")
+
+  // Timestamps
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  users        User[]
+  departments  Department[]
+  positions    Position[]
+  employees    Employee[]
+  leaveTypes   LeaveType[]
+  leaveRequests LeaveRequest[]
+
+  @@map("tenants")
+}
+
+// ============================================
+// USER & AUTHENTICATION
+// ============================================
+
+enum UserRole {
+  SUPER_ADMIN // Platform admin
+  ADMIN       // Tenant admin
+  HR_MANAGER  // HR department manager
+  MANAGER     // Department manager
+  EMPLOYEE    // Regular employee
+}
+
+model User {
+  id       String   @id @default(uuid())
+  tenantId String   @map("tenant_id")
+  tenant   Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  email    String
+  password String
+  role     UserRole @default(EMPLOYEE)
+
+  // Linked employee (optional, for non-employee users like external admins)
+  employeeId String?   @unique @map("employee_id")
+  employee   Employee? @relation(fields: [employeeId], references: [id], onDelete: SetNull)
+
+  // Status
+  isActive    Boolean @default(true) @map("is_active")
+  lastLoginAt DateTime? @map("last_login_at")
+
+  // Timestamps
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@unique([tenantId, email])
+  @@map("users")
+}
+
+// ============================================
+// ORGANIZATION STRUCTURE
+// ============================================
+
+model Department {
+  id       String  @id @default(uuid())
+  tenantId String  @map("tenant_id")
+  tenant   Tenant  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  name        String
+  code        String?
+  description String?
+
+  // Hierarchy
+  parentId String?     @map("parent_id")
+  parent   Department? @relation("DepartmentHierarchy", fields: [parentId], references: [id], onDelete: Restrict)
+  children Department[] @relation("DepartmentHierarchy")
+
+  // Manager
+  managerId String?   @map("manager_id")
+  manager   Employee? @relation("DepartmentManager", fields: [managerId], references: [id], onDelete: SetNull)
+
+  // Status
+  isActive Boolean @default(true) @map("is_active")
+
+  // Timestamps
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  positions Position[]
+  employees Employee[]
+
+  @@unique([tenantId, code])
+  @@map("departments")
+}
+
+model Position {
+  id       String @id @default(uuid())
+  tenantId String @map("tenant_id")
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  title       String
+  code        String?
+  description String?
+  level       String? // Junior, Mid, Senior, Lead, etc.
+
+  // Department
+  departmentId String     @map("department_id")
+  department   Department @relation(fields: [departmentId], references: [id], onDelete: Cascade)
+
+  // Status
+  isActive Boolean @default(true) @map("is_active")
+
+  // Timestamps
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  employees Employee[]
+
+  @@unique([tenantId, code])
+  @@map("positions")
+}
+
+// ============================================
+// EMPLOYEE MANAGEMENT
+// ============================================
+
+enum EmploymentType {
+  FULL_TIME
+  PART_TIME
+  CONTRACT
+  INTERN
+  TEMPORARY
+}
+
+enum EmploymentStatus {
+  ACTIVE
+  ON_LEAVE
+  TERMINATED
+  RESIGNED
+  RETIRED
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+  PREFER_NOT_TO_SAY
+}
+
+enum MaritalStatus {
+  SINGLE
+  MARRIED
+  DIVORCED
+  WIDOWED
+}
+
+model Employee {
+  id       String @id @default(uuid())
+  tenantId String @map("tenant_id")
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  // Personal Information
+  firstName   String  @map("first_name")
+  lastName    String  @map("last_name")
+  email       String?
+  phone       String?
+  dateOfBirth DateTime? @map("date_of_birth")
+  gender      Gender?
+  maritalStatus MaritalStatus? @map("marital_status")
+
+  // National ID
+  nationalId  String? @map("national_id")
+  taxId       String? @map("tax_id")
+
+  // Address
+  address     String?
+  city        String?
+  state       String?
+  postalCode  String? @map("postal_code")
+  country     String? @default("Turkey")
+
+  // Employment Information
+  employeeNumber String           @unique @map("employee_number")
+  hireDate       DateTime         @map("hire_date")
+  terminationDate DateTime?       @map("termination_date")
+  employmentType  EmploymentType  @default(FULL_TIME) @map("employment_type")
+  status          EmploymentStatus @default(ACTIVE)
+
+  // Organization
+  departmentId String     @map("department_id")
+  department   Department @relation(fields: [departmentId], references: [id], onDelete: Restrict)
+
+  positionId String   @map("position_id")
+  position   Position @relation(fields: [positionId], references: [id], onDelete: Restrict)
+
+  // Reporting
+  managerId String?   @map("manager_id")
+  manager   Employee? @relation("EmployeeManager", fields: [managerId], references: [id], onDelete: SetNull)
+  directReports Employee[] @relation("EmployeeManager")
+
+  // Salary (basic, detailed payroll will be in separate module)
+  salary       Float?
+  currency     String? @default("TRY")
+
+  // Emergency Contact
+  emergencyContactName  String? @map("emergency_contact_name")
+  emergencyContactPhone String? @map("emergency_contact_phone")
+  emergencyContactRelation String? @map("emergency_contact_relation")
+
+  // Profile
+  profilePhoto String? @map("profile_photo")
+  bio          String?
+
+  // Status
+  isActive Boolean @default(true) @map("is_active")
+
+  // Timestamps
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  user User?
+  managedDepartments Department[] @relation("DepartmentManager")
+  leaveRequests LeaveRequest[]
+
+  @@unique([tenantId, employeeNumber])
+  @@unique([tenantId, email])
+  @@map("employees")
+}
+
+// ============================================
+// LEAVE MANAGEMENT
+// ============================================
+
+model LeaveType {
+  id       String @id @default(uuid())
+  tenantId String @map("tenant_id")
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  name        String
+  code        String
+  description String?
+
+  // Leave rules
+  daysPerYear      Int     @default(0) @map("days_per_year")
+  requiresApproval Boolean @default(true) @map("requires_approval")
+  isPaid           Boolean @default(true) @map("is_paid")
+  canCarryForward  Boolean @default(false) @map("can_carry_forward")
+
+  // Status
+  isActive Boolean @default(true) @map("is_active")
+
+  // Timestamps
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  leaveRequests LeaveRequest[]
+
+  @@unique([tenantId, code])
+  @@map("leave_types")
+}
+
+enum LeaveRequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CANCELLED
+}
+
+model LeaveRequest {
+  id       String @id @default(uuid())
+  tenantId String @map("tenant_id")
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  // Employee
+  employeeId String   @map("employee_id")
+  employee   Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  // Leave type
+  leaveTypeId String    @map("leave_type_id")
+  leaveType   LeaveType @relation(fields: [leaveTypeId], references: [id], onDelete: Restrict)
+
+  // Leave period
+  startDate DateTime @map("start_date")
+  endDate   DateTime @map("end_date")
+  days      Float    // Can be decimal for half-days
+
+  // Request details
+  reason      String?
+  status      LeaveRequestStatus @default(PENDING)
+
+  // Approval
+  approvedBy String?   @map("approved_by")
+  approvedAt DateTime? @map("approved_at")
+  rejectionReason String? @map("rejection_reason")
+
+  // Timestamps
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("leave_requests")
+}
