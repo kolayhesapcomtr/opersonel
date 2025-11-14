@@ -374,7 +374,7 @@ export class LeaveRequestService {
     });
 
     const balances = await Promise.all(
-      leaveTypes.map(async (leaveType) => {
+      leaveTypes.map(async (leaveType: any) => {
         const approved = await prisma.leaveRequest.aggregate({
           where: {
             employeeId,

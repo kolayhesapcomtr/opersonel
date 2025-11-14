@@ -67,12 +67,12 @@ export class DepartmentService {
     const rootDepartments: any[] = [];
 
     // First pass: create map
-    departments.forEach((dept) => {
+    departments.forEach((dept: any) => {
       departmentMap.set(dept.id, { ...dept, children: [] });
     });
 
     // Second pass: build tree
-    departments.forEach((dept) => {
+    departments.forEach((dept: any) => {
       const deptNode = departmentMap.get(dept.id);
       if (dept.parentId) {
         const parent = departmentMap.get(dept.parentId);

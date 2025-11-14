@@ -123,12 +123,12 @@ export class DashboardService {
         totalPositions,
         recentHires,
       },
-      employeesByDepartment: employeesByDepartment.map((dept) => ({
+      employeesByDepartment: employeesByDepartment.map((dept: any) => ({
         departmentId: dept.id,
         departmentName: dept.name,
         count: dept._count.employees,
       })),
-      employeesByType: employeesByType.map((item) => ({
+      employeesByType: employeesByType.map((item: any) => ({
         type: item.employmentType,
         count: item._count,
       })),

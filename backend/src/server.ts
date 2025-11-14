@@ -47,7 +47,7 @@ app.get('/health', (_req, res) => {
 });
 
 // API routes
-app.get('/api', (req, res) => {
+app.get('/api', (req: any, res: any) => {
   res.json({
     success: true,
     message: 'Welcome to oPersonel API',
