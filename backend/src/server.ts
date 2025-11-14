@@ -17,6 +17,7 @@ import departmentRoutes from './modules/department/department.routes';
 import positionRoutes from './modules/position/position.routes';
 import dashboardRoutes from './modules/dashboard/dashboard.routes';
 import leaveRoutes from './modules/leave/leave.routes';
+import userRoutes from './modules/user/user.routes';
 
 const app: Application = express();
 
@@ -62,6 +63,7 @@ app.use('/api/employees', employeeRoutes);
 app.use('/api/departments', departmentRoutes);
 app.use('/api/positions', positionRoutes);
 app.use('/api/leave', leaveRoutes);
+app.use('/api/users', userRoutes);
 
 // Error handlers
 app.use(notFoundHandler);

@@ -4,15 +4,19 @@ import Modal from '../../components/ui/Modal';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import { ToastContainer } from '../../components/ui/Toast';
 import DepartmentForm from '../../components/forms/DepartmentForm';
+import DepartmentHierarchy from '../../components/department/DepartmentHierarchy';
 import { useToast } from '../../hooks/useToast';
 import { usePermissions } from '../../hooks/usePermissions';
 import { departmentService } from '../../services/departmentService';
 import { Department } from '../../types';
-import { Building2, Users, Plus, Edit, Trash2 } from 'lucide-react';
+import { Building2, Users, Plus, Edit, Trash2, Grid3x3, Network } from 'lucide-react';
+
+type ViewType = 'grid' | 'hierarchy';
 
 export default function DepartmentsPage() {
   const [departments, setDepartments] = useState<Department[]>([]);
   const [loading, setLoading] = useState(true);
+  const [viewType, setViewType] = useState<ViewType>('grid');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedDepartment, setSelectedDepartment] = useState<Department | undefined>();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -110,19 +114,48 @@ export default function DepartmentsPage() {
             <h1 className="text-3xl font-bold text-gray-900">Departmanlar</h1>
             <p className="text-gray-600 mt-1">{departments.length} departman</p>
           </div>
-          {canManage() && (
-            <button
-              onClick={handleCreate}
-              className="btn-primary inline-flex items-center"
-            >
-              <Plus className="w-5 h-5 mr-2" />
-              Yeni Departman
-            </button>
-          )}
+          <div className="flex items-center space-x-3">
+            {/* View Toggle */}
+            <div className="flex bg-gray-100 rounded-lg p-1">
+              <button
+                onClick={() => setViewType('grid')}
+                className={`inline-flex items-center px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                  viewType === 'grid'
+                    ? 'bg-white text-gray-900 shadow-sm'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                <Grid3x3 className="w-4 h-4 mr-1.5" />
+                Izgara
+              </button>
+              <button
+                onClick={() => setViewType('hierarchy')}
+                className={`inline-flex items-center px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                  viewType === 'hierarchy'
+                    ? 'bg-white text-gray-900 shadow-sm'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                <Network className="w-4 h-4 mr-1.5" />
+                Hiyerarşi
+              </button>
+            </div>
+
+            {canManage() && (
+              <button
+                onClick={handleCreate}
+                className="btn-primary inline-flex items-center"
+              >
+                <Plus className="w-5 h-5 mr-2" />
+                Yeni Departman
+              </button>
+            )}
+          </div>
         </div>
 
-        {/* Department Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {/* Department Grid View */}
+        {viewType === 'grid' && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {departments.map((department) => (
             <div key={department.id} className="card hover:shadow-lg transition-shadow relative group">
               {/* Action Buttons */}
@@ -192,21 +225,29 @@ export default function DepartmentsPage() {
               )}
             </div>
           ))}
-        </div>
 
-        {departments.length === 0 && (
-          <div className="text-center py-12">
-            <Building2 className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-            <p className="text-gray-500 mb-4">Henüz departman eklenmemiş</p>
-            {canManage() && (
-              <button
-                onClick={handleCreate}
-                className="btn-primary inline-flex items-center"
-              >
-                <Plus className="w-5 h-5 mr-2" />
-                İlk Departmanı Ekle
-              </button>
-            )}
+          {departments.length === 0 && (
+            <div className="col-span-full text-center py-12">
+              <Building2 className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+              <p className="text-gray-500 mb-4">Henüz departman eklenmemiş</p>
+              {canManage() && (
+                <button
+                  onClick={handleCreate}
+                  className="btn-primary inline-flex items-center"
+                >
+                  <Plus className="w-5 h-5 mr-2" />
+                  İlk Departmanı Ekle
+                </button>
+              )}
+            </div>
+          )}
+        </div>
+        )}
+
+        {/* Department Hierarchy View */}
+        {viewType === 'hierarchy' && (
+          <div className="card">
+            <DepartmentHierarchy departments={departments} />
           </div>
         )}
       </div>

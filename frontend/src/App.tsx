@@ -11,6 +11,8 @@ import DepartmentsPage from './pages/departments/DepartmentsPage';
 import PositionsPage from './pages/positions/PositionsPage';
 import LeaveRequestsPage from './pages/leave/LeaveRequestsPage';
 import LeaveTypesPage from './pages/leave/LeaveTypesPage';
+import SettingsPage from './pages/settings/SettingsPage';
+import UsersPage from './pages/users/UsersPage';
 
 function App() {
   return (
@@ -74,6 +76,22 @@ function App() {
           element={
             <ProtectedRoute>
               <LeaveTypesPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/settings"
+          element={
+            <ProtectedRoute>
+              <SettingsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/users"
+          element={
+            <ProtectedRoute>
+              <UsersPage />
             </ProtectedRoute>
           }
         />
