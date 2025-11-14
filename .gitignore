@@ -39,9 +39,6 @@ yarn-error.log*
 *.sqlite
 postgres-data/
 
-# Prisma
-backend/prisma/migrations/
-
 # TypeScript
 *.tsbuildinfo
 
