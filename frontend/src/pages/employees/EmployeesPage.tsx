@@ -4,21 +4,26 @@ import DashboardLayout from '../../components/layouts/DashboardLayout';
 import Modal from '../../components/ui/Modal';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import { ToastContainer } from '../../components/ui/Toast';
+import Pagination from '../../components/ui/Pagination';
+import AdvancedSearch from '../../components/ui/AdvancedSearch';
+import EmptyState from '../../components/ui/EmptyState';
+import { TableSkeleton } from '../../components/ui/SkeletonLoader';
 import EmployeeForm from '../../components/forms/EmployeeForm';
 import { useToast } from '../../hooks/useToast';
 import { usePermissions } from '../../hooks/usePermissions';
 import { employeeService } from '../../services/employeeService';
 import { departmentService } from '../../services/departmentService';
 import { Employee, Department, EmploymentStatus } from '../../types';
-import { Search, Plus, Mail, Phone, Building2, Briefcase, Trash2, Eye } from 'lucide-react';
+import { Search, Plus, Mail, Phone, Building2, Briefcase, Trash2, Eye, Users } from 'lucide-react';
 
 export default function EmployeesPage() {
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [departments, setDepartments] = useState<Department[]>([]);
   const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState('');
-  const [selectedDepartment, setSelectedDepartment] = useState('');
-  const [selectedStatus, setSelectedStatus] = useState('');
+  const [totalEmployees, setTotalEmployees] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [filters, setFilters] = useState<Record<string, any>>({});
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | undefined>();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -30,42 +35,55 @@ export default function EmployeesPage() {
   const { canManage, canEdit, canDelete } = usePermissions();
 
   useEffect(() => {
-    loadData();
+    loadDepartments();
   }, []);
 
   useEffect(() => {
-    filterEmployees();
-  }, [search, selectedDepartment, selectedStatus]);
+    loadEmployees();
+  }, [currentPage, itemsPerPage, filters]);
 
-  const loadData = async () => {
+  const loadDepartments = async () => {
     try {
-      const [employeesData, departmentsData] = await Promise.all([
-        employeeService.getAll(),
-        departmentService.getAll(),
-      ]);
-      setEmployees(employeesData);
-      setDepartments(departmentsData);
+      const data = await departmentService.getAll();
+      setDepartments(data);
     } catch (err) {
-      error('Veriler yüklenirken hata oluştu');
+      error('Departmanlar yüklenirken hata oluştu');
+    }
+  };
+
+  const loadEmployees = async () => {
+    setLoading(true);
+    try {
+      const data = await employeeService.getAll({
+        ...filters,
+        departmentId: filters.department || undefined,
+        status: filters.status as EmploymentStatus || undefined,
+      });
+
+      // Client-side pagination (for now, backend pagination can be added later)
+      setTotalEmployees(data.length);
+      const startIndex = (currentPage - 1) * itemsPerPage;
+      const endIndex = startIndex + itemsPerPage;
+      setEmployees(data.slice(startIndex, endIndex));
+    } catch (err) {
+      error('Çalışanlar yüklenirken hata oluştu');
     } finally {
       setLoading(false);
     }
   };
 
-  const filterEmployees = async () => {
-    setLoading(true);
-    try {
-      const data = await employeeService.getAll({
-        search,
-        departmentId: selectedDepartment || undefined,
-        status: selectedStatus as EmploymentStatus || undefined,
-      });
-      setEmployees(data);
-    } catch (err) {
-      error('Filtreleme sırasında hata oluştu');
-    } finally {
-      setLoading(false);
-    }
+  const handleSearch = (newFilters: Record<string, any>) => {
+    setFilters(newFilters);
+    setCurrentPage(1); // Reset to first page on new search
+  };
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
+  const handleItemsPerPageChange = (items: number) => {
+    setItemsPerPage(items);
+    setCurrentPage(1);
   };
 
   const handleCreate = () => {
@@ -89,7 +107,7 @@ export default function EmployeesPage() {
         success('Çalışan başarıyla oluşturuldu');
       }
       setIsModalOpen(false);
-      await loadData();
+      await loadEmployees();
     } catch (err: any) {
       error(err.response?.data?.error || 'İşlem başarısız oldu');
     } finally {
@@ -111,7 +129,7 @@ export default function EmployeesPage() {
       success('Çalışan başarıyla silindi');
       setIsDeleteDialogOpen(false);
       setEmployeeToDelete(null);
-      await loadData();
+      await loadEmployees();
     } catch (err: any) {
       error(err.response?.data?.error || 'Silme işlemi başarısız oldu');
     } finally {
@@ -143,15 +161,7 @@ export default function EmployeesPage() {
     );
   };
 
-  if (loading && employees.length === 0) {
-    return (
-      <DashboardLayout>
-        <div className="flex items-center justify-center h-64">
-          <div className="text-gray-500">Yükleniyor...</div>
-        </div>
-      </DashboardLayout>
-    );
-  }
+  const totalPages = Math.ceil(totalEmployees / itemsPerPage);
 
   return (
     <DashboardLayout>
@@ -162,7 +172,7 @@ export default function EmployeesPage() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold text-gray-900">Çalışanlar</h1>
-            <p className="text-gray-600 mt-1">{employees.length} çalışan</p>
+            <p className="text-gray-600 mt-1">{totalEmployees} çalışan</p>
           </div>
           {canManage() && (
             <button
@@ -175,60 +185,55 @@ export default function EmployeesPage() {
           )}
         </div>
 
-        {/* Filters */}
-        <div className="card">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div className="md:col-span-2">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                <input
-                  type="text"
-                  placeholder="İsim, email veya sicil no ile ara..."
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  className="input pl-10"
-                />
-              </div>
-            </div>
-
-            <div>
-              <select
-                value={selectedDepartment}
-                onChange={(e) => setSelectedDepartment(e.target.value)}
-                className="input"
-              >
-                <option value="">Tüm Departmanlar</option>
-                {departments.map((dept) => (
-                  <option key={dept.id} value={dept.id}>
-                    {dept.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <select
-                value={selectedStatus}
-                onChange={(e) => setSelectedStatus(e.target.value)}
-                className="input"
-              >
-                <option value="">Tüm Durumlar</option>
-                <option value="ACTIVE">Aktif</option>
-                <option value="ON_LEAVE">İzinli</option>
-                <option value="TERMINATED">İşten Çıkarıldı</option>
-                <option value="RESIGNED">İstifa Etti</option>
-                <option value="RETIRED">Emekli</option>
-              </select>
-            </div>
-          </div>
-        </div>
+        {/* Advanced Search */}
+        <AdvancedSearch
+          onSearch={handleSearch}
+          searchPlaceholder="İsim, email veya sicil no ile ara..."
+          filters={[
+            {
+              name: 'department',
+              label: 'Departman',
+              type: 'select',
+              options: departments.map((d) => ({ value: d.id, label: d.name })),
+            },
+            {
+              name: 'status',
+              label: 'Durum',
+              type: 'select',
+              options: [
+                { value: 'ACTIVE', label: 'Aktif' },
+                { value: 'ON_LEAVE', label: 'İzinli' },
+                { value: 'TERMINATED', label: 'İşten Çıkarıldı' },
+                { value: 'RESIGNED', label: 'İstifa Etti' },
+                { value: 'RETIRED', label: 'Emekli' },
+              ],
+            },
+          ]}
+        />
 
         {/* Employee List */}
         <div className="card overflow-hidden p-0">
-          {employees.length === 0 ? (
-            <div className="text-center py-12">
-              <p className="text-gray-500">Çalışan bulunamadı</p>
-            </div>
+          {loading ? (
+            <TableSkeleton rows={itemsPerPage} columns={6} />
+          ) : employees.length === 0 ? (
+            <EmptyState
+              icon={Users}
+              title="Çalışan bulunamadı"
+              description={
+                Object.keys(filters).length > 0
+                  ? 'Arama kriterlerine uygun çalışan bulunamadı. Filtreleri temizleyip tekrar deneyin.'
+                  : 'Henüz sisteme çalışan eklenmemiş.'
+              }
+              action={
+                canManage() && Object.keys(filters).length === 0
+                  ? {
+                      label: 'İlk Çalışanı Ekle',
+                      onClick: handleCreate,
+                      icon: Plus,
+                    }
+                  : undefined
+              }
+            />
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full">
@@ -338,6 +343,18 @@ export default function EmployeesPage() {
                 </tbody>
               </table>
             </div>
+          )}
+
+          {/* Pagination */}
+          {!loading && totalEmployees > 0 && (
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              totalItems={totalEmployees}
+              itemsPerPage={itemsPerPage}
+              onPageChange={handlePageChange}
+              onItemsPerPageChange={handleItemsPerPageChange}
+            />
           )}
         </div>
       </div>
