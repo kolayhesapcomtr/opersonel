@@ -6,11 +6,21 @@ const prisma = new PrismaClient();
 async function main() {
   console.log('🌱 Starting database seeding...');
 
-  // Create demo tenant
-  const tenant = await prisma.tenant.upsert({
+  // Check if demo data already exists
+  const existingTenant = await prisma.tenant.findUnique({
     where: { slug: 'demo-company' },
-    update: {},
-    create: {
+  });
+
+  if (existingTenant) {
+    console.log('ℹ️  Demo data already exists. Skipping seed.');
+    return;
+  }
+
+  console.log('🌱 Creating demo data...');
+
+  // Create demo tenant
+  const tenant = await prisma.tenant.create({
+    data: {
       name: 'Demo Company',
       slug: 'demo-company',
       email: 'info@democompany.com',
