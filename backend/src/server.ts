@@ -18,6 +18,7 @@ import positionRoutes from './modules/position/position.routes';
 import dashboardRoutes from './modules/dashboard/dashboard.routes';
 import leaveRoutes from './modules/leave/leave.routes';
 import userRoutes from './modules/user/user.routes';
+import notificationRoutes from './modules/notification/notification.routes';
 
 const app: Application = express();
 
@@ -64,6 +65,7 @@ app.use('/api/departments', departmentRoutes);
 app.use('/api/positions', positionRoutes);
 app.use('/api/leave', leaveRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 // Error handlers
 app.use(notFoundHandler);

@@ -87,6 +87,9 @@ model User {
   isActive    Boolean @default(true) @map("is_active")
   lastLoginAt DateTime? @map("last_login_at")
 
+  // Relations
+  notifications Notification[]
+
   // Timestamps
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
@@ -340,4 +343,39 @@ model LeaveRequest {
   updatedAt DateTime @updatedAt @map("updated_at")
 
   @@map("leave_requests")
+}
+// ============================================
+// NOTIFICATIONS
+// ============================================
+
+enum NotificationType {
+  LEAVE_REQUEST
+  ANNOUNCEMENT
+  REMINDER
+  SYSTEM
+}
+
+model Notification {
+  id      String   @id @default(uuid())
+  
+  // User
+  userId String @map("user_id")
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Content
+  title   String
+  message String
+  type    NotificationType
+  
+  // Link (optional)
+  link String?
+  
+  // Status
+  isRead Boolean @default(false) @map("is_read")
+  
+  // Timestamps
+  createdAt DateTime @default(now()) @map("created_at")
+  
+  @@map("notifications")
+  @@index([userId, isRead])
 }

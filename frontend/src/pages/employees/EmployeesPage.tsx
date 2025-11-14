@@ -7,17 +7,20 @@ import { ToastContainer } from '../../components/ui/Toast';
 import Pagination from '../../components/ui/Pagination';
 import AdvancedSearch from '../../components/ui/AdvancedSearch';
 import EmptyState from '../../components/ui/EmptyState';
+import ExportButton from '../../components/ui/ExportButton';
 import { TableSkeleton } from '../../components/ui/SkeletonLoader';
 import EmployeeForm from '../../components/forms/EmployeeForm';
 import { useToast } from '../../hooks/useToast';
 import { usePermissions } from '../../hooks/usePermissions';
 import { employeeService } from '../../services/employeeService';
 import { departmentService } from '../../services/departmentService';
+import { exportEmployees } from '../../utils/export';
 import { Employee, Department, EmploymentStatus } from '../../types';
 import { Search, Plus, Mail, Phone, Building2, Briefcase, Trash2, Eye, Users } from 'lucide-react';
 
 export default function EmployeesPage() {
   const [employees, setEmployees] = useState<Employee[]>([]);
+  const [allEmployees, setAllEmployees] = useState<Employee[]>([]);
   const [departments, setDepartments] = useState<Department[]>([]);
   const [loading, setLoading] = useState(true);
   const [totalEmployees, setTotalEmployees] = useState(0);
@@ -60,6 +63,9 @@ export default function EmployeesPage() {
         status: filters.status as EmploymentStatus || undefined,
       });
 
+      // Store all employees for export
+      setAllEmployees(data);
+
       // Client-side pagination (for now, backend pagination can be added later)
       setTotalEmployees(data.length);
       const startIndex = (currentPage - 1) * itemsPerPage;
@@ -84,6 +90,15 @@ export default function EmployeesPage() {
   const handleItemsPerPageChange = (items: number) => {
     setItemsPerPage(items);
     setCurrentPage(1);
+  };
+
+  const handleExport = (format: 'csv' | 'excel' | 'pdf') => {
+    try {
+      exportEmployees(allEmployees, format);
+      success(`${allEmployees.length} çalışan ${format.toUpperCase()} formatında dışa aktarıldı`);
+    } catch (err) {
+      error('Dışa aktarma sırasında hata oluştu');
+    }
   };
 
   const handleCreate = () => {
@@ -174,15 +189,24 @@ export default function EmployeesPage() {
             <h1 className="text-3xl font-bold text-gray-900">Çalışanlar</h1>
             <p className="text-gray-600 mt-1">{totalEmployees} çalışan</p>
           </div>
-          {canManage() && (
-            <button
-              onClick={handleCreate}
-              className="btn-primary inline-flex items-center"
-            >
-              <Plus className="w-5 h-5 mr-2" />
-              Yeni Çalışan
-            </button>
-          )}
+          <div className="flex items-center space-x-3">
+            {allEmployees.length > 0 && (
+              <ExportButton
+                onExport={handleExport}
+                disabled={loading}
+                formats={['excel', 'pdf']}
+              />
+            )}
+            {canManage() && (
+              <button
+                onClick={handleCreate}
+                className="btn-primary inline-flex items-center"
+              >
+                <Plus className="w-5 h-5 mr-2" />
+                Yeni Çalışan
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Advanced Search */}
