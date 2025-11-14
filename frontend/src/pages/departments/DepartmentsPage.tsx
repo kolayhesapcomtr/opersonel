@@ -5,6 +5,7 @@ import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import { ToastContainer } from '../../components/ui/Toast';
 import DepartmentForm from '../../components/forms/DepartmentForm';
 import { useToast } from '../../hooks/useToast';
+import { usePermissions } from '../../hooks/usePermissions';
 import { departmentService } from '../../services/departmentService';
 import { Department } from '../../types';
 import { Building2, Users, Plus, Edit, Trash2 } from 'lucide-react';
@@ -20,6 +21,7 @@ export default function DepartmentsPage() {
   const [isDeleting, setIsDeleting] = useState(false);
 
   const { toasts, removeToast, success, error } = useToast();
+  const { canManage, canEdit, canDelete } = usePermissions();
 
   useEffect(() => {
     loadDepartments();
@@ -108,13 +110,15 @@ export default function DepartmentsPage() {
             <h1 className="text-3xl font-bold text-gray-900">Departmanlar</h1>
             <p className="text-gray-600 mt-1">{departments.length} departman</p>
           </div>
-          <button
-            onClick={handleCreate}
-            className="btn-primary inline-flex items-center"
-          >
-            <Plus className="w-5 h-5 mr-2" />
-            Yeni Departman
-          </button>
+          {canManage() && (
+            <button
+              onClick={handleCreate}
+              className="btn-primary inline-flex items-center"
+            >
+              <Plus className="w-5 h-5 mr-2" />
+              Yeni Departman
+            </button>
+          )}
         </div>
 
         {/* Department Grid */}
@@ -122,22 +126,28 @@ export default function DepartmentsPage() {
           {departments.map((department) => (
             <div key={department.id} className="card hover:shadow-lg transition-shadow relative group">
               {/* Action Buttons */}
-              <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity flex space-x-2">
-                <button
-                  onClick={() => handleEdit(department)}
-                  className="p-2 bg-white rounded-lg shadow hover:bg-gray-50"
-                  title="Düzenle"
-                >
-                  <Edit className="w-4 h-4 text-gray-600" />
-                </button>
-                <button
-                  onClick={() => handleDeleteClick(department)}
-                  className="p-2 bg-white rounded-lg shadow hover:bg-red-50"
-                  title="Sil"
-                >
-                  <Trash2 className="w-4 h-4 text-red-600" />
-                </button>
-              </div>
+              {(canEdit() || canDelete()) && (
+                <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity flex space-x-2">
+                  {canEdit() && (
+                    <button
+                      onClick={() => handleEdit(department)}
+                      className="p-2 bg-white rounded-lg shadow hover:bg-gray-50"
+                      title="Düzenle"
+                    >
+                      <Edit className="w-4 h-4 text-gray-600" />
+                    </button>
+                  )}
+                  {canDelete() && (
+                    <button
+                      onClick={() => handleDeleteClick(department)}
+                      className="p-2 bg-white rounded-lg shadow hover:bg-red-50"
+                      title="Sil"
+                    >
+                      <Trash2 className="w-4 h-4 text-red-600" />
+                    </button>
+                  )}
+                </div>
+              )}
 
               <div className="flex items-start justify-between">
                 <div className="flex items-center">
@@ -188,13 +198,15 @@ export default function DepartmentsPage() {
           <div className="text-center py-12">
             <Building2 className="w-12 h-12 text-gray-400 mx-auto mb-4" />
             <p className="text-gray-500 mb-4">Henüz departman eklenmemiş</p>
-            <button
-              onClick={handleCreate}
-              className="btn-primary inline-flex items-center"
-            >
-              <Plus className="w-5 h-5 mr-2" />
-              İlk Departmanı Ekle
-            </button>
+            {canManage() && (
+              <button
+                onClick={handleCreate}
+                className="btn-primary inline-flex items-center"
+              >
+                <Plus className="w-5 h-5 mr-2" />
+                İlk Departmanı Ekle
+              </button>
+            )}
           </div>
         )}
       </div>

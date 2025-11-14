@@ -5,6 +5,7 @@ import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import { ToastContainer } from '../../components/ui/Toast';
 import LeaveRequestForm from '../../components/forms/LeaveRequestForm';
 import { useToast } from '../../hooks/useToast';
+import { usePermissions } from '../../hooks/usePermissions';
 import {
   leaveRequestService,
   leaveTypeService,
@@ -43,6 +44,7 @@ export default function LeaveRequestsPage() {
   });
 
   const { toasts, removeToast, success, error } = useToast();
+  const { canManage, canApproveLeave } = usePermissions();
 
   useEffect(() => {
     loadData();
@@ -186,10 +188,12 @@ export default function LeaveRequestsPage() {
             <h1 className="text-3xl font-bold text-gray-900">İzin Talepleri</h1>
             <p className="text-gray-600 mt-1">{leaveRequests.length} talep</p>
           </div>
-          <button onClick={handleCreate} className="btn-primary inline-flex items-center">
-            <Plus className="w-5 h-5 mr-2" />
-            Yeni Talep
-          </button>
+          {canManage() && (
+            <button onClick={handleCreate} className="btn-primary inline-flex items-center">
+              <Plus className="w-5 h-5 mr-2" />
+              Yeni Talep
+            </button>
+          )}
         </div>
 
         {/* Filters */}
@@ -235,10 +239,12 @@ export default function LeaveRequestsPage() {
             <div className="text-center py-12">
               <Calendar className="w-12 h-12 text-gray-400 mx-auto mb-4" />
               <p className="text-gray-500 mb-4">İzin talebi bulunamadı</p>
-              <button onClick={handleCreate} className="btn-primary inline-flex items-center">
-                <Plus className="w-5 h-5 mr-2" />
-                İlk Talebi Oluştur
-              </button>
+              {canManage() && (
+                <button onClick={handleCreate} className="btn-primary inline-flex items-center">
+                  <Plus className="w-5 h-5 mr-2" />
+                  İlk Talebi Oluştur
+                </button>
+              )}
             </div>
           ) : (
             <div className="overflow-x-auto">
@@ -296,7 +302,7 @@ export default function LeaveRequestsPage() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                         <div className="flex items-center space-x-2">
-                          {request.status === LeaveRequestStatus.PENDING && (
+                          {canApproveLeave() && request.status === LeaveRequestStatus.PENDING && (
                             <>
                               <button
                                 onClick={() =>
@@ -326,22 +332,23 @@ export default function LeaveRequestsPage() {
                               </button>
                             </>
                           )}
-                          {(request.status === LeaveRequestStatus.PENDING ||
-                            request.status === LeaveRequestStatus.APPROVED) && (
-                            <button
-                              onClick={() =>
-                                setActionDialog({
-                                  isOpen: true,
-                                  type: 'cancel',
-                                  request,
-                                })
-                              }
-                              className="text-gray-600 hover:text-gray-900 inline-flex items-center"
-                              title="İptal Et"
-                            >
-                              <Ban className="w-4 h-4" />
-                            </button>
-                          )}
+                          {canManage() &&
+                            (request.status === LeaveRequestStatus.PENDING ||
+                              request.status === LeaveRequestStatus.APPROVED) && (
+                              <button
+                                onClick={() =>
+                                  setActionDialog({
+                                    isOpen: true,
+                                    type: 'cancel',
+                                    request,
+                                  })
+                                }
+                                className="text-gray-600 hover:text-gray-900 inline-flex items-center"
+                                title="İptal Et"
+                              >
+                                <Ban className="w-4 h-4" />
+                              </button>
+                            )}
                         </div>
                       </td>
                     </tr>

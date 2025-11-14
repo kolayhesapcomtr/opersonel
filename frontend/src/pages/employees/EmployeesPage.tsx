@@ -6,6 +6,7 @@ import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import { ToastContainer } from '../../components/ui/Toast';
 import EmployeeForm from '../../components/forms/EmployeeForm';
 import { useToast } from '../../hooks/useToast';
+import { usePermissions } from '../../hooks/usePermissions';
 import { employeeService } from '../../services/employeeService';
 import { departmentService } from '../../services/departmentService';
 import { Employee, Department, EmploymentStatus } from '../../types';
@@ -26,6 +27,7 @@ export default function EmployeesPage() {
   const [isDeleting, setIsDeleting] = useState(false);
 
   const { toasts, removeToast, success, error } = useToast();
+  const { canManage, canEdit, canDelete } = usePermissions();
 
   useEffect(() => {
     loadData();
@@ -162,13 +164,15 @@ export default function EmployeesPage() {
             <h1 className="text-3xl font-bold text-gray-900">Çalışanlar</h1>
             <p className="text-gray-600 mt-1">{employees.length} çalışan</p>
           </div>
-          <button
-            onClick={handleCreate}
-            className="btn-primary inline-flex items-center"
-          >
-            <Plus className="w-5 h-5 mr-2" />
-            Yeni Çalışan
-          </button>
+          {canManage() && (
+            <button
+              onClick={handleCreate}
+              className="btn-primary inline-flex items-center"
+            >
+              <Plus className="w-5 h-5 mr-2" />
+              Yeni Çalışan
+            </button>
+          )}
         </div>
 
         {/* Filters */}
@@ -310,19 +314,23 @@ export default function EmployeesPage() {
                             <Eye className="w-4 h-4 mr-1" />
                             Görüntüle
                           </Link>
-                          <button
-                            onClick={() => handleEdit(employee)}
-                            className="text-primary-600 hover:text-primary-900"
-                          >
-                            Düzenle
-                          </button>
-                          <button
-                            onClick={() => handleDeleteClick(employee)}
-                            className="text-red-600 hover:text-red-900 inline-flex items-center"
-                          >
-                            <Trash2 className="w-4 h-4 mr-1" />
-                            Sil
-                          </button>
+                          {canEdit() && (
+                            <button
+                              onClick={() => handleEdit(employee)}
+                              className="text-primary-600 hover:text-primary-900"
+                            >
+                              Düzenle
+                            </button>
+                          )}
+                          {canDelete() && (
+                            <button
+                              onClick={() => handleDeleteClick(employee)}
+                              className="text-red-600 hover:text-red-900 inline-flex items-center"
+                            >
+                              <Trash2 className="w-4 h-4 mr-1" />
+                              Sil
+                            </button>
+                          )}
                         </div>
                       </td>
                     </tr>

@@ -10,6 +10,7 @@ import EmployeeDetailPage from './pages/employees/EmployeeDetailPage';
 import DepartmentsPage from './pages/departments/DepartmentsPage';
 import PositionsPage from './pages/positions/PositionsPage';
 import LeaveRequestsPage from './pages/leave/LeaveRequestsPage';
+import LeaveTypesPage from './pages/leave/LeaveTypesPage';
 
 function App() {
   return (
@@ -65,6 +66,14 @@ function App() {
           element={
             <ProtectedRoute>
               <LeaveRequestsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/leave-types"
+          element={
+            <ProtectedRoute>
+              <LeaveTypesPage />
             </ProtectedRoute>
           }
         />

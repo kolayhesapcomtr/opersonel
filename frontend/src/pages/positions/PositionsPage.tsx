@@ -5,6 +5,7 @@ import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import { ToastContainer } from '../../components/ui/Toast';
 import PositionForm from '../../components/forms/PositionForm';
 import { useToast } from '../../hooks/useToast';
+import { usePermissions } from '../../hooks/usePermissions';
 import { positionService } from '../../services/positionService';
 import { departmentService } from '../../services/departmentService';
 import { Position, Department } from '../../types';
@@ -23,6 +24,7 @@ export default function PositionsPage() {
   const [isDeleting, setIsDeleting] = useState(false);
 
   const { toasts, removeToast, success, error } = useToast();
+  const { canManage, canEdit, canDelete } = usePermissions();
 
   useEffect(() => {
     loadData();
@@ -161,13 +163,15 @@ export default function PositionsPage() {
             <h1 className="text-3xl font-bold text-gray-900">Pozisyonlar</h1>
             <p className="text-gray-600 mt-1">{positions.length} pozisyon</p>
           </div>
-          <button
-            onClick={handleCreate}
-            className="btn-primary inline-flex items-center"
-          >
-            <Plus className="w-5 h-5 mr-2" />
-            Yeni Pozisyon
-          </button>
+          {canManage() && (
+            <button
+              onClick={handleCreate}
+              className="btn-primary inline-flex items-center"
+            >
+              <Plus className="w-5 h-5 mr-2" />
+              Yeni Pozisyon
+            </button>
+          )}
         </div>
 
         {/* Filters */}
@@ -198,7 +202,7 @@ export default function PositionsPage() {
               <p className="text-gray-500 mb-4">
                 {selectedDepartment ? 'Bu departmanda pozisyon bulunamadı' : 'Henüz pozisyon eklenmemiş'}
               </p>
-              {!selectedDepartment && (
+              {!selectedDepartment && canManage() && (
                 <button
                   onClick={handleCreate}
                   className="btn-primary inline-flex items-center"
@@ -269,20 +273,24 @@ export default function PositionsPage() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                         <div className="flex items-center space-x-3">
-                          <button
-                            onClick={() => handleEdit(position)}
-                            className="text-primary-600 hover:text-primary-900 inline-flex items-center"
-                          >
-                            <Edit className="w-4 h-4 mr-1" />
-                            Düzenle
-                          </button>
-                          <button
-                            onClick={() => handleDeleteClick(position)}
-                            className="text-red-600 hover:text-red-900 inline-flex items-center"
-                          >
-                            <Trash2 className="w-4 h-4 mr-1" />
-                            Sil
-                          </button>
+                          {canEdit() && (
+                            <button
+                              onClick={() => handleEdit(position)}
+                              className="text-primary-600 hover:text-primary-900 inline-flex items-center"
+                            >
+                              <Edit className="w-4 h-4 mr-1" />
+                              Düzenle
+                            </button>
+                          )}
+                          {canDelete() && (
+                            <button
+                              onClick={() => handleDeleteClick(position)}
+                              className="text-red-600 hover:text-red-900 inline-flex items-center"
+                            >
+                              <Trash2 className="w-4 h-4 mr-1" />
+                              Sil
+                            </button>
+                          )}
                         </div>
                       </td>
                     </tr>

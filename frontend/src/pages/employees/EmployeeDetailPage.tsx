@@ -5,7 +5,9 @@ import Modal from '../../components/ui/Modal';
 import { ToastContainer } from '../../components/ui/Toast';
 import EmployeeForm from '../../components/forms/EmployeeForm';
 import { useToast } from '../../hooks/useToast';
+import { usePermissions } from '../../hooks/usePermissions';
 import { employeeService } from '../../services/employeeService';
+import { leaveRequestService, LeaveBalance } from '../../services/leaveService';
 import { Employee } from '../../types';
 import {
   ArrowLeft,
@@ -26,11 +28,13 @@ export default function EmployeeDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [employee, setEmployee] = useState<Employee | null>(null);
+  const [leaveBalances, setLeaveBalances] = useState<LeaveBalance[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const { toasts, removeToast, success, error } = useToast();
+  const { canEdit } = usePermissions();
 
   useEffect(() => {
     if (id) {
@@ -42,8 +46,12 @@ export default function EmployeeDetailPage() {
     if (!id) return;
 
     try {
-      const data = await employeeService.getById(id);
-      setEmployee(data);
+      const [employeeData, balanceData] = await Promise.all([
+        employeeService.getById(id),
+        leaveRequestService.getBalance(id).catch(() => []), // Don't fail if balance fails
+      ]);
+      setEmployee(employeeData);
+      setLeaveBalances(balanceData);
     } catch (err) {
       error('Çalışan bilgileri yüklenemedi');
       setTimeout(() => navigate('/employees'), 2000);
@@ -166,13 +174,15 @@ export default function EmployeeDetailPage() {
               <p className="text-gray-600 mt-1">{employee.employeeNumber}</p>
             </div>
           </div>
-          <button
-            onClick={handleEdit}
-            className="btn-primary inline-flex items-center"
-          >
-            <Edit className="w-5 h-5 mr-2" />
-            Düzenle
-          </button>
+          {canEdit() && (
+            <button
+              onClick={handleEdit}
+              className="btn-primary inline-flex items-center"
+            >
+              <Edit className="w-5 h-5 mr-2" />
+              Düzenle
+            </button>
+          )}
         </div>
 
         {/* Status Card */}
@@ -388,6 +398,48 @@ export default function EmployeeDetailPage() {
                     </div>
                   </div>
                 )}
+              </div>
+            </div>
+          )}
+
+          {/* Leave Balance */}
+          {leaveBalances.length > 0 && (
+            <div className="card">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                <Calendar className="w-5 h-5 mr-2" />
+                İzin Bakiyesi
+              </h3>
+              <div className="space-y-4">
+                {leaveBalances.map((balance) => (
+                  <div key={balance.leaveType.id} className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium text-gray-900">
+                        {balance.leaveType.name}
+                      </span>
+                      <span className="text-sm text-gray-600">
+                        {balance.available} / {balance.allocated} gün
+                      </span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div
+                        className={`h-2 rounded-full ${
+                          balance.available / balance.allocated > 0.5
+                            ? 'bg-green-500'
+                            : balance.available / balance.allocated > 0.2
+                            ? 'bg-yellow-500'
+                            : 'bg-red-500'
+                        }`}
+                        style={{
+                          width: `${(balance.available / balance.allocated) * 100}%`,
+                        }}
+                      />
+                    </div>
+                    <div className="flex items-center justify-between text-xs text-gray-500">
+                      <span>Kullanılan: {balance.used} gün</span>
+                      <span>Kalan: {balance.available} gün</span>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           )}
