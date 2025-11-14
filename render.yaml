@@ -1,11 +1,10 @@
-services:
-  # PostgreSQL Database
-  - type: pserv
-    name: opersonel-db
-    env: docker
+databases:
+  - name: opersonel-db
+    databaseName: opersonel
     plan: free
     region: frankfurt
 
+services:
   # Backend API
   - type: web
     name: opersonel-backend
