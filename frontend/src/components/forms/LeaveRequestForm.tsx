@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
+import { Employee } from '../../types';
 import { LeaveRequest, LeaveType, leaveTypeService } from '../../services/leaveService';
-import { Employee, employeeService } from '../../services/employeeService';
+import { employeeService } from '../../services/employeeService';
 
 interface LeaveRequestFormProps {
   leaveRequest?: LeaveRequest;

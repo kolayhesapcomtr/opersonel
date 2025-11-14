@@ -41,7 +41,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     navigate('/login');
   };
 
-  const navigation = [
+  const navigation: NavigationItem[] = [
     { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
     { name: 'Çalışanlar', href: '/employees', icon: Users },
     { name: 'Departmanlar', href: '/departments', icon: Building2 },

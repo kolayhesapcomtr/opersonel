@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Employee, Department, Position, EmploymentType, Gender, MaritalStatus } from '../../types';
+import { Employee, Department, Position } from '../../types';
 import { departmentService } from '../../services/departmentService';
 import { positionService } from '../../services/positionService';
 

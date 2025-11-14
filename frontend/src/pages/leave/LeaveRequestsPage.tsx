@@ -19,7 +19,6 @@ import {
   Check,
   X,
   Ban,
-  Clock,
   Filter,
 } from 'lucide-react';
 
@@ -89,14 +88,15 @@ export default function LeaveRequestsPage() {
     setIsModalOpen(true);
   };
 
-  const handleEdit = (request: LeaveRequest) => {
-    if (request.status !== LeaveRequestStatus.PENDING) {
-      error('Sadece beklemedeki talepler düzenlenebilir');
-      return;
-    }
-    setSelectedRequest(request);
-    setIsModalOpen(true);
-  };
+  // Uncomment when edit functionality is needed
+  // const handleEdit = (request: LeaveRequest) => {
+  //   if (request.status !== LeaveRequestStatus.PENDING) {
+  //     error('Sadece beklemedeki talepler düzenlenebilir');
+  //     return;
+  //   }
+  //   setSelectedRequest(request);
+  //   setIsModalOpen(true);
+  // };
 
   const handleSubmit = async (data: Partial<LeaveRequest>) => {
     setIsSubmitting(true);

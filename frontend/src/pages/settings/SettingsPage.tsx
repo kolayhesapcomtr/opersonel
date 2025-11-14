@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import DashboardLayout from '../../components/layouts/DashboardLayout';
 import { ToastContainer } from '../../components/ui/Toast';
 import { useToast } from '../../hooks/useToast';

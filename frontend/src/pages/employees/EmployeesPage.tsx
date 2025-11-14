@@ -16,7 +16,7 @@ import { employeeService } from '../../services/employeeService';
 import { departmentService } from '../../services/departmentService';
 import { exportEmployees } from '../../utils/export';
 import { Employee, Department, EmploymentStatus } from '../../types';
-import { Search, Plus, Mail, Phone, Building2, Briefcase, Trash2, Eye, Users } from 'lucide-react';
+import { Plus, Mail, Phone, Building2, Briefcase, Trash2, Eye, Users } from 'lucide-react';
 
 export default function EmployeesPage() {
   const [employees, setEmployees] = useState<Employee[]>([]);

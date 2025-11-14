@@ -122,6 +122,9 @@ export interface Department {
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
+  _count?: {
+    employees?: number;
+  };
 }
 
 // Position

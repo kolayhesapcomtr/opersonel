@@ -8,7 +8,7 @@ import { useToast } from '../../hooks/useToast';
 import { usePermissions } from '../../hooks/usePermissions';
 import { userService } from '../../services/userService';
 import { User, UserRole } from '../../types';
-import { Users, Plus, Mail, Shield, Edit, Trash2, CheckCircle, XCircle } from 'lucide-react';
+import { Users, Plus, Shield, Edit, Trash2, CheckCircle, XCircle } from 'lucide-react';
 
 export default function UsersPage() {
   const [users, setUsers] = useState<User[]>([]);
@@ -21,7 +21,7 @@ export default function UsersPage() {
   const [isDeleting, setIsDeleting] = useState(false);
 
   const { toasts, removeToast, success, error } = useToast();
-  const { canManage, isAdmin } = usePermissions();
+  const { isAdmin } = usePermissions();
 
   useEffect(() => {
     loadUsers();
