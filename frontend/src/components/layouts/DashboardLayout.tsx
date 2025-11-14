@@ -1,5 +1,6 @@
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
+import { usePermissions } from '../../hooks/usePermissions';
 import {
   Users,
   Building2,
@@ -11,7 +12,9 @@ import {
   LogOut,
   Menu,
   X,
-  LayoutDashboard
+  LayoutDashboard,
+  UserCircle,
+  ClipboardList
 } from 'lucide-react';
 import { useState } from 'react';
 
@@ -19,10 +22,18 @@ interface DashboardLayoutProps {
   children: React.ReactNode;
 }
 
+interface NavigationItem {
+  name: string;
+  href: string;
+  icon: any;
+  adminOnly?: boolean;
+}
+
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, tenant, logout } = useAuthStore();
+  const { isAdmin, isHR } = usePermissions();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const handleLogout = () => {
@@ -36,6 +47,8 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     { name: 'Departmanlar', href: '/departments', icon: Building2 },
     { name: 'Pozisyonlar', href: '/positions', icon: Briefcase },
     { name: 'İzinler', href: '/leave-requests', icon: Calendar },
+    { name: 'İzin Türleri', href: '/leave-types', icon: ClipboardList, adminOnly: true },
+    { name: 'Kullanıcılar', href: '/users', icon: UserCircle, adminOnly: true },
     { name: 'Bordro', href: '/payroll', icon: DollarSign },
     { name: 'Raporlar', href: '/reports', icon: BarChart3 },
     { name: 'Ayarlar', href: '/settings', icon: Settings },
@@ -82,25 +95,27 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
           {/* Navigation */}
           <nav className="flex-1 px-4 py-4 space-y-1 overflow-y-auto">
-            {navigation.map((item) => {
-              const isActive = location.pathname === item.href;
-              const Icon = item.icon;
+            {navigation
+              .filter((item) => !item.adminOnly || isAdmin() || isHR())
+              .map((item) => {
+                const isActive = location.pathname === item.href;
+                const Icon = item.icon;
 
-              return (
-                <Link
-                  key={item.name}
-                  to={item.href}
-                  className={`flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
-                    isActive
-                      ? 'bg-primary-50 text-primary-700'
-                      : 'text-gray-700 hover:bg-gray-100'
-                  }`}
-                >
-                  <Icon className="w-5 h-5 mr-3" />
-                  {item.name}
-                </Link>
-              );
-            })}
+                return (
+                  <Link
+                    key={item.name}
+                    to={item.href}
+                    className={`flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
+                      isActive
+                        ? 'bg-primary-50 text-primary-700'
+                        : 'text-gray-700 hover:bg-gray-100'
+                    }`}
+                  >
+                    <Icon className="w-5 h-5 mr-3" />
+                    {item.name}
+                  </Link>
+                );
+              })}
           </nav>
 
           {/* User Profile */}
