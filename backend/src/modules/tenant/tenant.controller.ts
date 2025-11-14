@@ -6,7 +6,7 @@ export class TenantController {
   /**
    * Get all tenants (admin only)
    */
-  async getAll(req: Request, res: Response) {
+  async getAll(_req: Request, res: Response) {
     const tenants = await tenantService.findAll();
     return ResponseHelper.success(res, tenants);
   }

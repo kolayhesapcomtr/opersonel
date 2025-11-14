@@ -1,5 +1,4 @@
 import prisma from '../../database/prisma';
-import { LeaveType } from '@prisma/client';
 import { AppError } from '../../middleware/error.middleware';
 
 export interface CreateLeaveTypeDto {

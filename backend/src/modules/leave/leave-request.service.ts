@@ -1,5 +1,5 @@
 import prisma from '../../database/prisma';
-import { LeaveRequest, LeaveRequestStatus } from '@prisma/client';
+import { LeaveRequestStatus } from '@prisma/client';
 import { AppError } from '../../middleware/error.middleware';
 
 export interface CreateLeaveRequestDto {

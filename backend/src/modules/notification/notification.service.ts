@@ -82,7 +82,7 @@ export class NotificationService {
   // Helper method to create leave request notifications
   async createLeaveNotification(
     userId: string,
-    leaveRequestId: string,
+    _leaveRequestId: string,
     type: 'CREATED' | 'APPROVED' | 'REJECTED',
     employeeName: string
   ) {

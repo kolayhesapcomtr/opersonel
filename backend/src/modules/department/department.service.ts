@@ -1,5 +1,4 @@
 import prisma from '../../database/prisma';
-import { Department } from '@prisma/client';
 import { AppError } from '../../middleware/error.middleware';
 
 export interface CreateDepartmentDto {

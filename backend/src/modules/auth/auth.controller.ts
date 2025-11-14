@@ -38,7 +38,7 @@ export class AuthController {
   /**
    * Logout
    */
-  async logout(req: Request, res: Response) {
+  async logout(_req: Request, res: Response) {
     // Clear tenant cookie
     res.clearCookie('tenantId');
 

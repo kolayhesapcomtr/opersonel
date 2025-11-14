@@ -9,6 +9,7 @@ declare global {
   namespace Express {
     interface Request {
       user?: JwtPayload;
+      userId?: string;
     }
   }
 }
@@ -18,7 +19,7 @@ declare global {
  */
 export const authenticate = async (
   req: Request,
-  res: Response,
+  _res: Response,
   next: NextFunction
 ) => {
   try {
@@ -37,8 +38,9 @@ export const authenticate = async (
     // Attach user to request
     req.user = payload;
 
-    // Also set tenantId for convenience
+    // Also set tenantId and userId for convenience
     req.tenantId = payload.tenantId;
+    req.userId = payload.userId;
 
     next();
   } catch (error) {
@@ -50,11 +52,14 @@ export const authenticate = async (
   }
 };
 
+// Alias for compatibility
+export const authMiddleware = authenticate;
+
 /**
  * Authorize user by role
  */
 export const authorize = (...roles: UserRole[]) => {
-  return (req: Request, res: Response, next: NextFunction) => {
+  return (req: Request, _res: Response, next: NextFunction) => {
     if (!req.user) {
       throw new AppError('Not authenticated', 401);
     }

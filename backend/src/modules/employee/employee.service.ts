@@ -1,5 +1,5 @@
 import prisma from '../../database/prisma';
-import { Employee, EmploymentType, EmploymentStatus, Gender, MaritalStatus } from '@prisma/client';
+import { EmploymentType, EmploymentStatus, Gender, MaritalStatus } from '@prisma/client';
 import { AppError } from '../../middleware/error.middleware';
 
 export interface CreateEmployeeDto {
@@ -313,7 +313,7 @@ export class EmployeeService {
   /**
    * Terminate employee
    */
-  async terminate(tenantId: string, id: string, terminationDate: string, reason?: string) {
+  async terminate(tenantId: string, id: string, terminationDate: string, _reason?: string) {
     await this.findById(tenantId, id);
 
     return await prisma.employee.update({

@@ -22,7 +22,7 @@ export class TenantMiddleware {
    * 3. Session/Cookie (current method)
    * 4. Header (for API requests)
    */
-  static async resolve(req: Request, res: Response, next: NextFunction) {
+  static async resolve(req: Request, _res: Response, next: NextFunction) {
     try {
       let tenant: Tenant | null = null;
 
@@ -69,7 +69,7 @@ export class TenantMiddleware {
   /**
    * Middleware to require tenant (use after resolve)
    */
-  static require(req: Request, res: Response, next: NextFunction) {
+  static require(req: Request, _res: Response, next: NextFunction) {
     if (!req.tenant || !req.tenantId) {
       throw new AppError('Tenant context required. Please select a company.', 400);
     }

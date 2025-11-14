@@ -271,8 +271,10 @@ export class AuthService {
    * Generate JWT token
    */
   private generateToken(payload: JwtPayload): string {
-    return jwt.sign(payload, config.jwt.secret, {
-      expiresIn: config.jwt.expiresIn,
+    const secret = String(config.jwt.secret);
+    // Type assertion needed due to jsonwebtoken types issue
+    return jwt.sign(payload, secret, {
+      expiresIn: (config.jwt.expiresIn || '7d') as any,
     });
   }
 
@@ -281,7 +283,8 @@ export class AuthService {
    */
   verifyToken(token: string): JwtPayload {
     try {
-      return jwt.verify(token, config.jwt.secret) as JwtPayload;
+      const secret = String(config.jwt.secret);
+      return jwt.verify(token, secret) as JwtPayload;
     } catch (error) {
       throw new AppError('Invalid or expired token', 401);
     }

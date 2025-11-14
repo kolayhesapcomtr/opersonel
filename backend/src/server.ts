@@ -37,7 +37,7 @@ app.use(logger);
 app.use(resolveTenant);
 
 // Health check
-app.get('/health', (req, res) => {
+app.get('/health', (_req, res) => {
   res.json({
     success: true,
     message: 'oPersonel API is running',

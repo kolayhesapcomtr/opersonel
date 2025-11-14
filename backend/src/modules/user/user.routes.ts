@@ -1,4 +1,4 @@
-import { Router, Request, Response } from 'express';
+import { Router, Response } from 'express';
 import { UserService } from './user.service';
 import { authMiddleware } from '../../middleware/auth.middleware';
 import { UserRole } from '@prisma/client';
@@ -29,12 +29,12 @@ router.get('/', async (req: any, res: Response) => {
     // Remove password from response
     const usersWithoutPassword = users.map(({ password, ...user }) => user);
 
-    res.json({
+    return res.json({
       success: true,
       data: usersWithoutPassword,
     });
   } catch (error: any) {
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       error: error.message || 'Failed to fetch users',
     });
@@ -56,12 +56,12 @@ router.get('/:id', async (req: any, res: Response) => {
     // Remove password from response
     const { password, ...userWithoutPassword } = user;
 
-    res.json({
+    return res.json({
       success: true,
       data: userWithoutPassword,
     });
   } catch (error: any) {
-    res.status(error.message === 'User not found' ? 404 : 500).json({
+    return res.status(error.message === 'User not found' ? 404 : 500).json({
       success: false,
       error: error.message || 'Failed to fetch user',
     });
@@ -124,13 +124,13 @@ router.post('/', async (req: any, res: Response) => {
     // Remove password from response
     const { password: _, ...userWithoutPassword } = user;
 
-    res.status(201).json({
+    return res.status(201).json({
       success: true,
       data: userWithoutPassword,
       message: 'User created successfully',
     });
   } catch (error: any) {
-    res.status(400).json({
+    return res.status(400).json({
       success: false,
       error: error.message || 'Failed to create user',
     });
@@ -187,13 +187,13 @@ router.put('/:id', async (req: any, res: Response) => {
     // Remove password from response
     const { password: _, ...userWithoutPassword } = user;
 
-    res.json({
+    return res.json({
       success: true,
       data: userWithoutPassword,
       message: 'User updated successfully',
     });
   } catch (error: any) {
-    res.status(error.message === 'User not found' ? 404 : 400).json({
+    return res.status(error.message === 'User not found' ? 404 : 400).json({
       success: false,
       error: error.message || 'Failed to update user',
     });
@@ -220,12 +220,12 @@ router.delete('/:id', async (req: any, res: Response) => {
 
     await userService.delete(req.params.id, req.user.tenantId);
 
-    res.json({
+    return res.json({
       success: true,
       message: 'User deleted successfully',
     });
   } catch (error: any) {
-    res.status(error.message === 'User not found' ? 404 : 400).json({
+    return res.status(error.message === 'User not found' ? 404 : 400).json({
       success: false,
       error: error.message || 'Failed to delete user',
     });
